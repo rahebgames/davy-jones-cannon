@@ -1,0 +1,54 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "background_tiles.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "background_tiles.tmx": {
+            "scale": 1,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 423.5,
+                "y": 356.5
+            }
+        },
+        "background_tiles.tmx#pirate_background": {
+            "scaleInDock": 1
+        },
+        "pirate_background.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "C:/Users/User/Documents/CMPM 120/gallery-shooter/assets",
+    "last.imagePath": "C:/Users/User/Documents/CMPM 120/gallery-shooter/assets",
+    "lastUsedTilesetExportFilter": "All Files (*)",
+    "map.height": 10,
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 64,
+    "map.tileWidth": 64,
+    "map.width": 13,
+    "openFiles": [
+        "background_tiles.tmx"
+    ],
+    "project": "background.tiled-project",
+    "recentFiles": [
+        "background_tiles.tmx",
+        "pirate_background.tsx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 64,
+        "width": 64
+    }
+}
