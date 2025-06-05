@@ -8,18 +8,24 @@ class EnemyCannonball extends Phaser.GameObjects.Sprite {
         this.active = false;
         this.xDir = "null";
         this.yDir = "null";
-
+        this.speed = 500;
         this.cooldown = 10;
         this.frames = this.cooldown;
+
+        this.game = scene;
+        this.game.physics.add.existing(this);
+        this.body.setSize(10, 10);
+        this.group = this.game.my.sprite.enemyCannonballGroup;
+
         return this;
     }
 
     update() {
         if (this.active) {
-            if (this.xDir == "right") this.x += this.speed;
-            if (this.xDir == "left") this.x -= this.speed;
-            if (this.yDir == "up") this.y -= this.speed;
-            if (this.yDir == "down") this.y += this.speed;
+            if (this.xDir == "right") this.body.setVelocityX(this.speed);
+            if (this.xDir == "left") this.body.setVelocityX(-this.speed);
+            if (this.yDir == "up") this.body.setVelocityY(-this.speed);
+            if (this.yDir == "down") this.body.setVelocityY(this.speed);
 
             if (this.xDir == "right" && this.yDir == "up") this.angle = 225;
             else if (this.xDir == "right" && this.yDir == "down") this.angle = -45;
@@ -38,6 +44,7 @@ class EnemyCannonball extends Phaser.GameObjects.Sprite {
 
             let onScreen = this.x > (this.displayWidth/2) && this.x < (game.config.width - (this.displayWidth/2)) && this.y > (this.displayHeight/2) && this.y < (game.config.height - (this.displayHeight/2))
             if (!onScreen) {
+                this.game.physics.world.disable(this);
                 this.group.remove(this, true);
             }
         }
@@ -46,11 +53,13 @@ class EnemyCannonball extends Phaser.GameObjects.Sprite {
     makeActive() {
         this.visible = true;
         this.active = true;
+        this.game.physics.world.enable(this);
     }
 
     makeInactive() {
         this.visible = false;
         this.active = false;
+        this.game.physics.world.disable(this);
     }
 
 }

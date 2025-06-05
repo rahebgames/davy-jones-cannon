@@ -6,12 +6,17 @@ class Cannonball extends Phaser.GameObjects.Sprite {
         this.ry = this.displayHeight/2;
         this.visible = false;
         this.active = false;
+        this.speed = 1000;
+        this.game = scene;
+        this.game.physics.add.existing(this);
+        this.body.setSize(10, 10);
+
         return this;
     }
 
     update() {
         if (this.active) {
-            this.y -= this.speed;
+            this.body.setVelocityY(-this.speed);
             if (this.y < -(this.displayHeight/2)) {
                 this.makeInactive();
             }
@@ -21,11 +26,13 @@ class Cannonball extends Phaser.GameObjects.Sprite {
     makeActive() {
         this.visible = true;
         this.active = true;
+        this.game.physics.world.enable(this);
     }
 
     makeInactive() {
         this.visible = false;
         this.active = false;
+        this.game.physics.world.disable(this);
     }
 
 }
