@@ -2,8 +2,6 @@ class EnemyCannonball extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y, texture, frame) {        
         super(scene, x, y, texture, frame);
 
-        this.rx = this.displayWidth/2;
-        this.ry = this.displayHeight/2;
         this.visible = false;
         this.active = false;
         this.xDir = "null";
@@ -49,17 +47,4 @@ class EnemyCannonball extends Phaser.GameObjects.Sprite {
             }
         }
     }
-
-    makeActive() {
-        this.visible = true;
-        this.active = true;
-        this.game.physics.world.enable(this);
-    }
-
-    makeInactive() {
-        this.visible = false;
-        this.active = false;
-        this.game.physics.world.disable(this);
-    }
-
 }

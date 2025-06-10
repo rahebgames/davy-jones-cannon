@@ -30,12 +30,12 @@ class Start extends Phaser.Scene {
         this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         if(this.finalScore) {
-            this.add.text(400, 300, "Guns Blazing\nHigh Score: " + this.finalScore + "\nPress Space to Start", {
+            this.add.text(400, 300, "Davy Jones\' Cannon\nHigh Score: " + this.finalScore + "\nPress Space to Start", {
                 fontSize: '48px',
                 color: "#000000"
             }).setOrigin(0.5);
         } else {
-            this.add.text(400, 300, "Yaaarrrgggghhhh!!!!!\nPress Space to Start", {
+            this.add.text(400, 300, "Davy Jones\' Cannon\nPress Space to Start", {
                 fontSize: '48px',
                 color: "#000000"
             }).setOrigin(0.5);

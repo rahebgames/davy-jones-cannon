@@ -4,6 +4,7 @@ class Game extends Phaser.Scene {
 
         this.playerX = game.config.width / 2;
         this.playerY = game.config.height - 50;
+        this.playerFrames = ["ship (13).png", "ship (7).png", "ship (1).png"];
 
         this.cannonballSpeed = 10;
 
@@ -37,6 +38,11 @@ class Game extends Phaser.Scene {
         this.load.tilemapTiledJSON("map", "background.json");
         this.load.atlasXML("ships", "shipsMiscellaneous_sheet.png", "shipsMiscellaneous_sheet.xml");
 
+        this.load.image("bronze", "bronze.png");
+        this.load.image("silver", "silver.png");
+        this.load.image("black", "black.png");
+        this.load.image("gold", "gold.png");
+
         this.load.audio("enemy_fire", "enemy_fire.ogg");
         this.load.audio("player_fire", "player_fire.ogg");
         this.load.audio("enemy_impact", "enemy_impact.ogg");
@@ -48,6 +54,9 @@ class Game extends Phaser.Scene {
 
         this.init_game();
 
+        this.physics.world.drawDebug = false;
+        this.physics.world.debugGraphic.clear();
+
         let my = this.my;   // create an alias to this.my for readability
 
         this.map = this.add.tilemap("map", 64, 64, 13, 10);
@@ -57,12 +66,22 @@ class Game extends Phaser.Scene {
         this.shadingLayer = this.map.createLayer("Shading", this.tileset, 0, 0);
         this.decorLayer = this.map.createLayer("Decor", this.tileset, 0, 0);
 
-        my.sprite.player = new Player(this, this.playerX, this.playerY, "ships", "ship (1).png");
+        my.sprite.player = new Player(this, this.playerX, this.playerY, "ships", this.playerFrames[2]);
 
         this.scoreText = this.add.text(20, 20, "Score: " + this.score, {
             fontSize: '24px',
             color: "#000000"
         })
+
+        my.sprite.powerupGroup = this.add.group({
+            active: true,
+            maxSize: -1,
+            runChildUpdate: true
+        });
+        this.powerupConfig = {
+            key: "bronze",
+            classType: Powerup
+        };
 
         my.sprite.enemyCannonballGroup = this.add.group({
             active: true,
@@ -71,11 +90,6 @@ class Game extends Phaser.Scene {
             maxSize: -1,
             runChildUpdate: true
         }); 
-        this.enemyCannonballConfig = {
-            classType: EnemyCannonball,
-            key: my.sprite.enemyCannonballGroup.defaultKey,
-            frame: my.sprite.enemyCannonballGroup.defaultFrame,
-        };
 
         my.sprite.enemyGroup = this.add.group({
             active: true,
@@ -89,6 +103,52 @@ class Game extends Phaser.Scene {
             key: my.sprite.enemyGroup.defaultKey,
             frame: my.sprite.enemyGroup.defaultFrame,
         };
+
+        this.physics.add.overlap(my.sprite.enemyGroup, my.sprite.cannonballGroup, (obj1, obj2) => {
+            if (obj2.active) {
+                this.sound.play("enemy_impact");
+                obj1.hp -= 1;
+                if (obj1.hp > 0) {
+                    obj1.setSprite();
+                }
+                else {
+                    this.physics.world.disable(obj1);
+                    my.sprite.enemyGroup.remove(obj1, true);
+                    this.enemyCount -= 1;
+                    this.score += 100;
+                    this.scoreText.setText("Score: " + this.score);
+                    if (this.score > this.highScore) this.highScore = this.score;
+                }
+                obj2.makeInactive();
+            }
+        });
+
+        this.physics.add.overlap(my.sprite.player, my.sprite.enemyCannonballGroup, (obj1, obj2) => {
+            this.sound.play("player_impact");
+                obj1.takeDamage();
+                this.physics.world.disable(obj2);
+                my.sprite.enemyCannonballGroup.remove(obj2, true);
+        });
+
+        this.physics.add.overlap(my.sprite.player, my.sprite.enemyGroup, (obj1, obj2) => {
+            if (obj2.type >= 2) {
+                this.physics.world.disable(obj2);
+                my.sprite.enemyGroup.remove(obj2, true);
+                this.sound.play("enemy_impact");
+                this.enemyCount -= 1;
+                this.score += 50;
+                this.scoreText.setText("Score: " + this.score);
+                if (this.score > this.highScore) this.highScore = this.score;
+                obj1.takeDamage();
+            }
+        });
+
+        this.physics.add.overlap(my.sprite.player, my.sprite.powerupGroup, (obj1, obj2) => {
+            obj1.powerupFrames = obj1.powerupCooldown;
+            obj1.attackPattern = obj2.rank + 1;
+            this.physics.world.disable(obj2);
+            my.sprite.powerupGroup.remove(obj2, true);
+        });
 
         this.input.keyboard.on('keydown-P', () => {
             this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
@@ -109,135 +169,26 @@ class Game extends Phaser.Scene {
             this.spawnedEnemyCount = 0;
             this.maxEnemyCount = this.startEnemyCount * (this.enemyCountMod ** (this.wave - 1));
             this.waveFrames = this.enemyCooldown;
+            if (this.wave % 3 == 0) {
+                my.sprite.powerupGroup.createFromConfig(this.powerupConfig);
+                console.log("Powerup spawned");
+            }
             this.waveInProgress = true;
-            my.sprite.player.hp = 3;
-            my.sprite.player.setFrame("ship (1).png");
+            my.sprite.player.hp = my.sprite.player.maxHP;
+            my.sprite.player.setFrame(this.playerFrames[2]);
             console.log("New Wave: " + this.maxEnemyCount + " enemies");
 
         } else {
             if (this.spawnedEnemyCount < this.maxEnemyCount) {
                 this.waveFrames -= 1;
                 if (this.waveFrames < 0) {
-                    let enemy = my.sprite.enemyGroup.createFromConfig(this.enemyConfig)[0];
+                    my.sprite.enemyGroup.createFromConfig(this.enemyConfig)[0];
                     this.waveFrames = this.enemyCooldown;
                     this.enemyCount += 1;
                     this.spawnedEnemyCount += 1;
                 }
-            } else if (this.enemyCount == 0) {
+            } else if (this.enemyCount <= 0) {
                 this.waveInProgress = false;
-            }
-        }
-
-        for (let cannonball of my.sprite.cannonballGroup.children.entries) {
-            for (let enemy of my.sprite.enemyGroup.children.entries) {
-                if (this.collides(cannonball, enemy) && cannonball.active) {
-                    this.sound.play("enemy_impact");
-                    enemy.hp -= 1;
-                    switch (enemy.type) {
-                        case 0:
-                            switch (enemy.hp) {
-                                case 2:
-                                    enemy.setFrame("ship (12).png");
-                                    break;
-                                case 1:
-                                    enemy.setFrame("ship (18).png");
-                                    break;
-                                case 0:
-                                    this.physics.world.disable(enemy);
-                                    my.sprite.enemyGroup.remove(enemy, true);
-                                    this.enemyCount -= 1;
-                                    this.score += 100;
-                                    this.scoreText.setText("Score: " + this.score);
-                                    if (this.score > this.highScore) this.highScore = this.score;
-                                    break;
-                            }
-                            break;
-
-                            case 1:
-                                switch (enemy.hp) {
-                                    case 2:
-                                        enemy.setFrame("ship (9).png");
-                                        break;
-                                    case 1:
-                                        enemy.setFrame("ship (15).png");
-                                        break;
-                                    case 0:
-                                        this.physics.world.disable(enemy);
-                                        my.sprite.enemyGroup.remove(enemy, true);
-                                        this.enemyCount -= 1;
-                                        this.score += 100;
-                                        this.scoreText.setText("Score: " + this.score);
-                                        if (this.score > this.highScore) this.highScore = this.score;
-                                        break;
-                                }
-                                break;
-
-                                case 2:
-                                    switch (enemy.hp) {
-                                        case 2:
-                                            enemy.setFrame("ship (8).png");
-                                            break;
-                                        case 1:
-                                            enemy.setFrame("ship (14).png");
-                                            break;
-                                        case 0:
-                                            this.physics.world.disable(enemy);
-                                            my.sprite.enemyGroup.remove(enemy, true);
-                                            this.enemyCount -= 1;
-                                            this.score += 50;
-                                            this.scoreText.setText("Score: " + this.score);
-                                        if (this.score > this.highScore) this.highScore = this.score;
-                                            break;
-                                    }
-                                    break;
-                    }
-                    cannonball.makeInactive();
-                }
-            }
-        }
-
-        for (let cannonball of my.sprite.enemyCannonballGroup.children.entries) {
-            if (this.collides(cannonball, my.sprite.player)) {
-                this.sound.play("player_impact");
-                my.sprite.player.hp -= 1;
-                switch (my.sprite.player.hp) {
-                    case 2:
-                        my.sprite.player.setFrame("ship (7).png");
-                        break;
-                    case 1:
-                        my.sprite.player.setFrame("ship (13).png");
-                        break;
-                    case 0:
-                        this.scene.start("startScene", {highScore: this.highScore});
-                        break;
-                }
-                this.physics.world.disable(cannonball);
-                my.sprite.enemyCannonballGroup.remove(cannonball, true);
-            }
-        }
-
-        for (let enemy of my.sprite.enemyGroup.children.entries) {
-            if (enemy.type == 2) {
-                if (this.collides(enemy, my.sprite.player)) {
-                    my.sprite.enemyGroup.remove(enemy, true);
-                    this.sound.play("enemy_impact");
-                    this.enemyCount -= 1;
-                    this.score += 50;
-                    this.scoreText.setText("Score: " + this.score);
-                    if (this.score > this.highScore) this.highScore = this.score;
-                    my.sprite.player.hp -= 1;
-                    switch (my.sprite.player.hp) {
-                        case 2:
-                            my.sprite.player.setFrame("ship (7).png");
-                            break;
-                        case 1:
-                            my.sprite.player.setFrame("ship (13).png");
-                            break;
-                        case 0:
-                            this.scene.start("startScene", {highScore: this.highScore});
-                            break;
-                    }
-                }
             }
         }
 
