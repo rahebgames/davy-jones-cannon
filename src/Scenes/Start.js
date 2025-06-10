@@ -35,7 +35,7 @@ class Start extends Phaser.Scene {
                 color: "#000000"
             }).setOrigin(0.5);
         } else {
-            this.add.text(400, 300, "Davy Jones\' Cannon\nPress Space to Start", {
+            this.add.text(400, 300, "Davy Jones\' Cannon\nCreated by Cici Raheb\nPress Space to Start", {
                 fontSize: '48px',
                 color: "#000000"
             }).setOrigin(0.5);
